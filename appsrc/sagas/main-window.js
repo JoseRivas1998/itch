@@ -46,7 +46,7 @@ function * _createWindow () {
   const bounds = {
     x: -1,
     y: -1,
-    width: 1220,
+    width: 1250,
     height: 720,
     ...userBounds
   }
@@ -61,6 +61,7 @@ function * _createWindow () {
     show: false,
     autoHideMenuBar: true,
     backgroundColor: darkMineShaft,
+    titleBarStyle: 'hidden',
     'title-bar-style': 'hidden'
   })
 

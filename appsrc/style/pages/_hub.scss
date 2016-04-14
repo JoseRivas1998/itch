@@ -5,6 +5,9 @@
 @import 'hub/search';
 @import 'hub/history';
 @import 'hub/downloads';
+@import 'hub/browser-meat';
+@import 'hub/game-meat';
+@import 'hub/preferences';
 
 .hub-page {
   overflow: hidden;
@@ -18,6 +21,7 @@
 }
 
 .hub-content {
+  border-left: 1px solid $sidebar-border-color;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -45,10 +49,11 @@
   flex-wrap: wrap;
   justify-content: space-around;
   align-items: flex-start;
+  align-content: flex-start;
 
   .hub-item, .hub-filler {
     width: $grid-item-width;
-    margin: .5em 0;
+    margin: .5em;
   }
 
   .hub-filler {
@@ -67,5 +72,14 @@
   .filter-info {
     width: 100%;
     margin: 10px;
+  }
+
+  .hub-meat-tab {
+    display: none;
+
+    &.visible {
+      display: flex;
+      flex-grow: 1;
+    }
   }
 }

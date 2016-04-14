@@ -1,27 +1,24 @@
 
 import {handleActions} from 'redux-actions'
-import {pluck, reject, indexBy} from 'underline'
+import {each, map, filter, pluck, reject, indexBy} from 'underline'
+import invariant from 'invariant'
 
 import SearchExamples from '../../constants/search-examples'
+import staticTabData from '../../constants/static-tab-data'
 import {pathToId} from '../../util/navigation'
 
 const initialState = {
   page: 'gate',
   tabs: {
     constant: [
-      {path: 'featured', label: ['sidebar.featured']},
-      {path: 'dashboard', label: ['sidebar.dashboard']},
-      {path: 'library', label: ['sidebar.owned']}
+      {path: 'featured'},
+      {path: 'dashboard'},
+      {path: 'library'}
     ],
-    transient: [
-      {path: 'collections/2348', label: 'Garden, Grow and Plant'},
-      {path: 'games/48062', label: 'Reap'},
-      {path: 'games/25491', label: 'FPV Freerider'},
-      {path: 'users/3996', label: 'Managore'},
-      {path: 'collections/25108', label: 'I made a Fall Out Boy collection and all I got was wrapping label tabs'}
-    ]
+    transient: []
   },
-  path: 'dashboard'
+  tabData: staticTabData,
+  path: 'featured'
 }
 
 export default handleActions({
@@ -31,8 +28,11 @@ export default handleActions({
   },
 
   NAVIGATE: (state, action) => {
-    const path = action.payload
+    const {path, data} = action.payload
+    invariant(typeof path === 'string', 'path must be a string')
+    invariant(typeof data === 'object', 'data must be an object')
 
+    const {tabData} = state
     const {tabs} = state
     const {constant, transient} = tabs
     const tabsByPath = constant.concat(transient)::indexBy('path')
@@ -41,20 +41,12 @@ export default handleActions({
       return {...state, path}
     } else {
       let label
-      if (path === 'preferences') {
-        label = ['sidebar.preferences']
-      } else if (path === 'history') {
-        label = ['sidebar.history']
-      } else if (path === 'downloads') {
-        label = ['sidebar.downloads']
-      } else if (/^search/.test(path)) {
+      if (/^search/.test(path)) {
         label = pathToId(path)
       }
 
-      const newTab = {
-        path,
-        label
-      }
+      const newTab = {path}
+
       const newTabs = {
         constant,
         transient: [
@@ -62,7 +54,45 @@ export default handleActions({
           ...transient
         ]
       }
-      return {...state, path, tabs: newTabs}
+
+      const newTabData = {
+        ...tabData,
+        [path]: {
+          ...tabData[path],
+          label,
+          ...data
+        }
+      }
+
+      return {...state, path, tabs: newTabs, tabData: newTabData}
+    }
+  },
+
+  MOVE_TAB: (state, action) => {
+    const {before, after} = action.payload
+    invariant(typeof before === 'number', 'old tab index is a number')
+    invariant(typeof after === 'number', 'new tab index is a number')
+
+    const {tabs} = state
+    const {transient} = tabs
+
+    const newTransient = transient::map((t, i) => {
+      switch (i) {
+        case before:
+          return transient[after]
+        case after:
+          return transient[before]
+        default:
+          return t
+      }
+    })
+
+    return {
+      ...state,
+      tabs: {
+        ...tabs,
+        transient: newTransient
+      }
     }
   },
 
@@ -97,6 +127,72 @@ export default handleActions({
     const {results} = action.payload
     const searchExampleIndex = Math.floor(Math.random() * (SearchExamples.length - 1))
     return {...state, searchResults: results, searchOpen: true, searchExample: SearchExamples[searchExampleIndex]}
+  },
+
+  TAB_DATA_FETCHED: (state, action) => {
+    const {path, data} = action.payload
+    const {tabData} = state
+    const newTabData = {
+      ...tabData,
+      [path]: {
+        ...tabData[path],
+        ...data
+      }
+    }
+
+    return {...state, tabData: newTabData}
+  },
+
+  TAB_EVOLVED: (state, action) => {
+    const {before, after, data} = action.payload
+    invariant(typeof before === 'string', 'before path must be a string')
+    invariant(typeof after === 'string', 'after path must be a string')
+
+    const pathMap = {}
+    state.tabs.transient::each((t) => pathMap[t.path] = true)
+
+    const newTransient = state.tabs.transient::map((t) => {
+      if (t.path === before) {
+        if (pathMap[after]) {
+          return null
+        }
+        return { path: after }
+      } else {
+        return t
+      }
+    })::filter((x) => x)
+
+    const newTabData = {
+      ...state.tabData,
+      [after]: {
+        ...state.tabData[after],
+        ...data
+      }
+    }
+
+    return {
+      ...state,
+      path: state.path === before ? after : state.path,
+      tabs: {
+        ...state.tabs,
+        transient: newTransient
+      },
+      tabData: newTabData
+    }
+  },
+
+  TABS_RESTORED: (state, action) => {
+    const snapshot = action.payload
+    invariant(typeof snapshot === 'object', 'tab snapshot must be an object')
+
+    return {
+      ...state,
+      path: snapshot.current,
+      tabs: {
+        ...state.tabs,
+        transient: snapshot.items::map((x) => ({path: x}))
+      }
+    }
   },
 
   CLOSE_SEARCH: (state, action) => {

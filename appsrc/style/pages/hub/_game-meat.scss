@@ -1,0 +1,68 @@
+
+$meat-cover-scale: 0.4;
+
+.game-meat {
+  .game-actions {
+    padding: 0 20px;
+  }
+
+  .game-cover {
+    flex-shrink: 0;
+    border-radius: 2px;
+    width: $grid-item-width * $meat-cover-scale;
+    height: $grid-item-height * $meat-cover-scale;
+
+    background-color: black;
+    background-size: cover;
+    background-position: 50% 50%;
+    box-shadow: 0 0 20px rgba(0, 0, 0, .3); // FIXME colors
+  }
+
+  .game-stats {
+    display: flex;
+    font-size: 15px;
+    color: $secondary-text-color;
+    padding: 10px 0;
+
+    div {
+      margin-right: 12px;
+    }
+  }
+
+  .game-actions {
+    flex-shrink: 0;
+    padding-right: 0;
+    flex-direction: row-reverse;
+
+    .main-action {
+      width: 200px;
+      text-align: center;
+      font-size: 17px;
+      padding: 15px 20px;
+
+      .icon {
+        display: none;
+      }
+    }
+
+    &.task-download, &.task-install, &.task-configure, &.task-find-upload, &.task-launch {
+      .main-action {
+        margin-right: 0;
+        flex-grow: 1;
+        text-align: center;
+        font-weight: normal;
+        @include discreet-button;
+      }
+    }
+
+    .cave-actions {
+      margin: 0;
+      margin-right: 8px;
+      font-size: 18px;
+
+      .secondary-action {
+        margin: 0 8px;
+      }
+    }
+  }
+}

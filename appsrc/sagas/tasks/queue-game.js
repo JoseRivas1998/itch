@@ -1,6 +1,7 @@
 
 import {put, call, select} from 'redux-saga/effects'
 import pathmaker from '../../util/pathmaker'
+import invariant from 'invariant'
 
 import {log, opts} from './log'
 import {startTask} from './start-task'
@@ -10,6 +11,7 @@ import * as actions from '../../actions'
 
 export function * _queueGame (action) {
   const {game} = action.payload
+  invariant(typeof game === 'object', 'queueGame has a game object')
   const cave = yield select((state) => state.globalMarket.cavesByGameId[game.id])
 
   if (cave) {
@@ -29,11 +31,12 @@ export function * _queueGame (action) {
   if (uploads.length > 0) {
     if (uploads.length > 1) {
       // TODO: implement this, this task doesn't exist.
-      const upload = (yield call(startTask, {
-        name: 'pick-upload',
-        uploads,
-        downloadKey
-      })).result
+      // const upload = (yield call(startTask, {
+      //   name: 'pick-upload',
+      //   uploads,
+      //   downloadKey
+      // })).result
+      const upload = uploads[0]
 
       yield call(startDownload, {
         game,

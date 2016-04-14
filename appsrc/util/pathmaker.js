@@ -41,9 +41,22 @@ export function globalDbPath () {
   return path.join(app.getPath('userData'), 'marketdb')
 }
 
+export function preferencesPath () {
+  return path.join(app.getPath('userData'), 'preferences.json')
+}
+
 export function userDbPath (userId) {
   invariant(userId, 'valid user id')
   return path.join(app.getPath('userData'), 'users', '' + userId, 'marketdb')
 }
 
-export default {appPath, downloadPath, globalDbPath, userDbPath}
+export function sanitize (file) {
+  const sane = file.replace(/[^a-zA-Z0-9_. -]/g, '').replace(/[\s]+/, ' ')
+  if (sane.length > 0) {
+    return sane
+  } else {
+    return 'nihilo'
+  }
+}
+
+export default {appPath, downloadPath, globalDbPath, userDbPath, sanitize, preferencesPath}

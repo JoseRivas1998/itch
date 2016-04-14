@@ -1,5 +1,5 @@
 
-import sniff from '../../util/sniff'
+import fnout from 'fnout'
 import spawn from '../../util/spawn'
 import mklog from '../../util/log'
 const log = mklog('install/core')
@@ -68,7 +68,13 @@ const self = {
     const cave = opts.cave
     if (!cave) return null
 
-    log(opts, `retrieving installer type of ${opts.archivePath} from cache`)
+    const {archivePath} = opts
+    if (!archivePath) {
+      log(opts, `no archive available, can't retrieve cached type`)
+      return
+    }
+
+    log(opts, `retrieving installer type of ${archivePath} from cache`)
     const installerCache = cave.installerCache || {}
     const installerName = installerCache[cave.uploadId]
 
@@ -82,8 +88,12 @@ const self = {
 
   sniffType: async function (opts) {
     const {archivePath} = opts
+    if (!archivePath) {
+      log(opts, `no archive available, can't sniff type, going with 'archive' uninstaller`)
+      return 'archive'
+    }
 
-    const type = await sniff.path(archivePath)
+    const type = await fnout.path(archivePath)
     log(opts, `sniffed type ${JSON.stringify(type)} for ${archivePath}`)
     if (!type) {
       throw new UnhandledFormat(archivePath)

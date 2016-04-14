@@ -13,7 +13,7 @@ import {
   focusSearch,
   showNextTab,
   showPreviousTab,
-  closeTab
+  triggerMainAction
 } from '../actions'
 
 const queue = createQueue('shortcuts')
@@ -44,6 +44,6 @@ combo.bindGlobal(['ctrl+shift+tab', 'ctrl+pageup'], () => {
   queue.dispatch(showPreviousTab())
 })
 
-combo.bindGlobal(['ctrl+w'], () => {
-  queue.dispatch(closeTab())
+combo.bindGlobal(['ctrl+enter', 'command+enter'], () => {
+  queue.dispatch(triggerMainAction())
 })

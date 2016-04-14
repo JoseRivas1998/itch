@@ -1,14 +1,24 @@
 
 import {createAction} from 'redux-actions'
+import {gameToTabData} from '../util/navigation'
 
 import {
   NAVIGATE,
+  MOVE_TAB,
+  EVOLVE_TAB,
+  TAB_EVOLVED,
   CLOSE_TAB,
   SHOW_PREVIOUS_TAB,
   SHOW_NEXT_TAB,
   SWITCH_PAGE,
 
+  TAB_CHANGED,
+  TABS_CHANGED,
+  TABS_RESTORED,
+  TAB_DATA_FETCHED,
+
   OPEN_URL,
+  TRIGGER_MAIN_ACTION,
 
   OPEN_PREFERENCES,
   VIEW_CREATOR_PROFILE,
@@ -17,13 +27,32 @@ import {
   REPORT_ISSUE
 } from '../constants/action-types'
 
-export const navigate = createAction(NAVIGATE)
+const _navigate = createAction(NAVIGATE)
+export const navigate = (path, data = {}) => {
+  if (typeof path === 'object') {
+    return _navigate(path)
+  } else {
+    return _navigate({path, data})
+  }
+}
+
+export const navigateToGame = (game) => navigate(`games/${game.id}`, gameToTabData(game))
+
+export const moveTab = createAction(MOVE_TAB)
+export const evolveTab = createAction(EVOLVE_TAB)
+export const tabEvolved = createAction(TAB_EVOLVED)
 export const closeTab = createAction(CLOSE_TAB)
 export const showPreviousTab = createAction(SHOW_PREVIOUS_TAB)
 export const showNextTab = createAction(SHOW_NEXT_TAB)
 export const switchPage = createAction(SWITCH_PAGE)
 
+export const tabChanged = createAction(TAB_CHANGED)
+export const tabsChanged = createAction(TABS_CHANGED)
+export const tabsRestored = createAction(TABS_RESTORED)
+export const tabDataFetched = createAction(TAB_DATA_FETCHED)
+
 export const openUrl = createAction(OPEN_URL)
+export const triggerMainAction = createAction(TRIGGER_MAIN_ACTION)
 
 export const openPreferences = createAction(OPEN_PREFERENCES)
 export const viewCreatorProfile = createAction(VIEW_CREATOR_PROFILE)

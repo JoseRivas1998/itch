@@ -19,6 +19,7 @@ module.exports = keyMirror({
 
   SETUP_STATUS: null,
   SETUP_DONE: null,
+  RETRY_SETUP: null,
 
   SESSION_READY: null,
   SESSIONS_REMEMBERED: null,
@@ -54,11 +55,20 @@ module.exports = keyMirror({
 
   /* Navigation */
   NAVIGATE: null,
+  MOVE_TAB: null,
+  EVOLVE_TAB: null,
+  TAB_EVOLVED: null,
   CLOSE_TAB: null,
   SHOW_PREVIOUS_TAB: null,
   SHOW_NEXT_TAB: null,
   SWITCH_PAGE: null,
   OPEN_URL: null,
+  TRIGGER_MAIN_ACTION: null,
+
+  TAB_CHANGED: null,
+  TABS_CHANGED: null,
+  TABS_RESTORED: null,
+  TAB_DATA_FETCHED: null,
 
   /* Menu */
   REFRESH_MENU: null,
@@ -92,16 +102,11 @@ module.exports = keyMirror({
   LOCALE_DOWNLOAD_ENDED: null,
 
   /* Install locations */
-  COMPUTE_INSTALL_LOCATION_SIZE: null,
-  CANCEL_INSTALL_LOCATION_SIZE_COMPUTATION: null,
   BROWSE_INSTALL_LOCATION: null,
   ADD_INSTALL_LOCATION_REQUEST: null,
   ADD_INSTALL_LOCATION: null,
-  ADD_INSTALL_LOCATIONED: null,
   REMOVE_INSTALL_LOCATION_REQUEST: null,
   REMOVE_INSTALL_LOCATION: null,
-  REMOVE_INSTALL_LOCATIOND: null,
-  TRANSFER_INSTALL_LOCATION: null,
   MAKE_INSTALL_LOCATION_DEFAULT: null,
 
   /* Tasks */

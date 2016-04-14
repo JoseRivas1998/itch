@@ -1,7 +1,7 @@
 
 const self = {
   itchRepo: 'https://github.com/itchio/itch',
-  itchio: 'https://itch.io',
+  originalItchio: 'https://itch.io',
   appHomepage: 'https://itch.io/app',
   itchTranslationPlatform: 'https://weblate.itch.ovh/projects/itch',
   githubApi: 'https://api.github.com',
@@ -13,10 +13,10 @@ const self = {
   }
 }
 
-const itchioApi = process.env.WHEN_IN_ROME || self.itchio
+self.itchio = process.env.WHEN_IN_ROME || self.originalItchio
 
 Object.assign(self, {
-  itchioApi,
+  itchioApi: self.itchio,
   termsOfService: `${self.itchio}/docs/legal/terms`,
   accountRegister: `${self.itchio}/register`,
   accountForgotPassword: `${self.itchio}/user/forgot-password`,

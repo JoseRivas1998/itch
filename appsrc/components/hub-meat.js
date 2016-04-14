@@ -1,38 +1,68 @@
 
 import React, {PropTypes, Component} from 'react'
 import {connect} from './connect'
+import {pathToId} from '../util/navigation'
+import {createSelector, createStructuredSelector} from 'reselect'
+import classNames from 'classnames'
 
 import HubSearchResults from './hub-search-results'
 import HubItem from './hub-item'
 import HubGhostItem from './hub-ghost-item'
 
 import Downloads from './downloads'
+import Preferences from './preferences'
 import History from './history'
+import FeaturedMeat from './featured-meat'
+import CollectionMeat from './collection-meat'
+import GameMeat from './game-meat'
+import UserMeat from './user-meat'
+import SearchMeat from './search-meat'
+import UrlMeat from './url-meat'
 
-import {filter, each, map, indexBy, where} from 'underline'
+import {pluck, filter, each, map, indexBy} from 'underline'
 
 export class HubMeat extends Component {
   render () {
-    const {path, me, games, downloadKeys} = this.props
-
-    let child = ''
-
-    if (path === 'featured') {
-      child = <div className='hub-grid'>You'd like some featured content wouldn't you?</div>
-    } else if (path === 'dashboard') {
-      child = this.gameGrid(games::where({userId: me.id}))
-    } else if (path === 'library') {
-      child = this.gameGrid(downloadKeys::map((key) => games[key.gameId])::indexBy('id'))
-    } else if (path === 'downloads') {
-      child = <Downloads/>
-    } else if (path === 'history') {
-      child = <History/>
-    }
+    const {tabs} = this.props
 
     return <div className='hub-meat'>
-      {child}
+      {tabs::map((path) => {
+        const visible = (path === this.props.path)
+        const classes = classNames('hub-meat-tab', {visible})
+        return <div key={path} className={classes}>{this.renderTab(path)}</div>
+      })}
       <HubSearchResults/>
     </div>
+  }
+
+  renderTab (path) {
+    const {games, myGameIds, downloadKeys} = this.props
+
+    if (path === 'featured') {
+      return <FeaturedMeat/>
+    } else if (path === 'dashboard') {
+      return this.gameGrid(myGameIds::map((id) => games[id]))
+    } else if (path === 'library') {
+      return this.gameGrid(downloadKeys::map((key) => games[key.gameId])::indexBy('id'))
+    } else if (path === 'downloads') {
+      return <Downloads/>
+    } else if (path === 'history') {
+      return <History/>
+    } else if (path === 'preferences') {
+      return <Preferences/>
+    } else if (/^collections/.test(path)) {
+      return <CollectionMeat collectionId={+pathToId(path)}/>
+    } else if (/^games/.test(path)) {
+      return <GameMeat gameId={+pathToId(path)}/>
+    } else if (/^users/.test(path)) {
+      return <UserMeat userId={+pathToId(path)}/>
+    } else if (/^search/.test(path)) {
+      return <SearchMeat query={pathToId(path)}/>
+    } else if (/^url/.test(path)) {
+      return <UrlMeat url={pathToId(path)}/>
+    } else {
+      return '?'
+    }
   }
 
   gameGrid (games) {
@@ -68,15 +98,25 @@ HubMeat.propTypes = {
   path: PropTypes.string,
   me: PropTypes.object,
   games: PropTypes.object,
-  downloadKeys: PropTypes.object
+  myGameIds: PropTypes.array,
+  downloadKeys: PropTypes.object,
+  tabs: PropTypes.array
 }
 
-const mapStateToProps = (state) => ({
-  typedQuery: state.session.search.typedQuery,
-  path: state.session.navigation.path,
-  me: state.session.credentials.me,
-  games: state.market.games,
-  downloadKeys: state.market.downloadKeys
+const allTabsSelector = createSelector(
+  (state) => state.session.navigation.tabs,
+  (tabs) => tabs.constant::pluck('path').concat(tabs.transient::pluck('path'))
+)
+
+const mapStateToProps = createStructuredSelector({
+  typedQuery: (state) => state.session.search.typedQuery,
+  path: (state) => state.session.navigation.path,
+  tabs: (state) => allTabsSelector(state),
+  me: (state) => state.session.credentials.me,
+  games: (state) => state.market.games,
+  myGameIds: (state) => (((state.market.itchAppProfile || {}).myGames || {}).ids || []),
+  collections: (state) => state.market.collections,
+  downloadKeys: (state) => state.market.downloadKeys
 })
 const mapDispatchToProps = (dispatch) => ({})
 

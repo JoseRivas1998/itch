@@ -20,7 +20,7 @@ import {opts} from '../logger'
 import {startDownload} from './tasks/start-download'
 
 import {
-  USER_DB_READY,
+  SESSION_READY,
   CHECK_FOR_GAME_UPDATES
 } from '../constants/action-types'
 
@@ -61,11 +61,18 @@ function * checkForGameUpdate (cave) {
   invariant(credentials, 'has credentials')
 
   const market = getUserMarket()
-  const game = yield call(fetch.gameLazily, market, credentials, cave.gameId)
+  let game
+  try {
+    game = yield call(fetch.gameLazily, market, credentials, cave.gameId)
+  } catch (e) {
+    log(opts, `Could not fetch game ${cave.gameId}, skipping (${e.message || e})`)
+    return
+  }
+
   const logger = new mklog.Logger({sinks: {console: false, string: true}})
 
   if (game) {
-    log(opts, `Looking for updates to ${game.title}: stub`)
+    log(opts, `Looking for updates to ${game.title}...`)
     const out = new EventEmitter()
     const taskOpts = {
       ...opts,
@@ -80,7 +87,8 @@ function * checkForGameUpdate (cave) {
     try {
       const {uploads, downloadKey} = yield call(findUpload, out, taskOpts)
       if (uploads.length === 0) {
-        log(opts, `Can't check for updates for ${game.title}, no uploads`)
+        log(opts, `Can't check for updates for ${game.title}, no uploads.`)
+        logger.contents.split('\n').map((line) => log(opts, `> ${line}`))
         return
       }
       const upload = uploads[0]
@@ -95,7 +103,7 @@ function * checkForGameUpdate (cave) {
           upload,
           destPath: archivePath,
           downloadKey,
-          reason: 'install' // update, really I suppose
+          reason: 'update'
         })
       }
     } catch (e) {
@@ -107,7 +115,7 @@ function * checkForGameUpdate (cave) {
 }
 
 function * installUpdater () {
-  yield take(USER_DB_READY)
+  yield take(SESSION_READY)
 
   while (true) {
     log(opts, `Regularly scheduled check for game updates...`)

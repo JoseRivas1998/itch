@@ -7,97 +7,63 @@ import {createSelector, createStructuredSelector} from 'reselect'
 
 import * as actions from '../actions'
 import defaultImages from '../constants/default-images'
+import {pathToIcon} from '../util/navigation'
 
 import Icon from './icon'
 import Dropdown from './dropdown'
+import HubSidebarItem from './hub-sidebar-item'
 
 export class HubSidebar extends Component {
-
   constructor () {
     super()
   }
 
   render () {
-    const {t, osx, fullscreen, path, tabs, navigate, counts, closeTab} = this.props
+    const {t, osx, sidebarWidth, fullscreen, path: currentPath, tabs, tabData, navigate, counts, closeTab, moveTab} = this.props
     const classes = classNames('hub-sidebar', {osx, fullscreen})
+    const sidebarStyle = {
+      width: sidebarWidth + 'px'
+    }
 
-    return <div className={classes}>
+    return <div className={classes} style={sidebarStyle}>
       <div className='title-bar-padder'/>
       {this.dropdown()}
 
-      <h2>{t('sidebar.category.basics')}</h2>
-      {tabs.constant::map((item) => {
-        const classes = classNames({active: path === item.path})
-        const onClick = () => navigate(item.path)
-
-        return <section key={item.path} className={classes} onClick={onClick} data-path={item.path}>
-          <span className={`icon icon-${this.pathToIcon(item.path)}`}/>
-          {t.format(item.label)}
-        </section>
-      })}
-
-      <h2>{t('sidebar.category.tabs')}</h2>
-      {tabs.transient.length
-        ? tabs.transient::map((item) => {
-          const classes = classNames({
-            active: path === item.path
-          })
+      <div className='sidebar-items'>
+        <h2>{t('sidebar.category.basics')}</h2>
+        {tabs.constant::map((item) => {
+          const {path} = item
+          const {label = 'Loading...'} = tabData[item.path] || {}
+          const icon = pathToIcon(item.path)
+          const active = currentPath === item.path
           const onClick = () => navigate(item.path)
-          const number = counts[item.path]
 
-          return <section key={item.path} className={classes} onClick={onClick} data-path={item.path}>
-            <span className={`icon icon-${this.pathToIcon(item.path)}`}/>
-            {t.format(item.label)}
-            { number > 0
-            ? <span className='bubble'>{number}</span>
-            : ''}
-            <div className='filler'/>
-            <span className='icon icon-cross' onClick={(e) => {
-              closeTab(item.path)
-              e.stopPropagation()
-            }}/>
+          const props = {path, label, icon, active, onClick, t}
+          return <HubSidebarItem {...props}/>
+        })}
+
+        <h2>{t('sidebar.category.tabs')}</h2>
+        {tabs.transient.length
+          ? tabs.transient::map((item, index) => {
+            const {path} = item
+            const data = tabData[item.path] || {}
+            const {label = 'Loading...'} = data
+            const icon = pathToIcon(item.path)
+            const active = currentPath === item.path
+            const onClick = () => navigate(path)
+            const onClose = () => closeTab(path)
+            const count = counts[item.path]
+
+            const props = {index, path, label, icon, active, onClick, count, onClose, moveTab, data, t}
+            return <HubSidebarItem {...props}/>
+          })
+          : <section className='empty'>
+          <span className='icon icon-like'/>
+          {t('sidebar.no_tabs')}
           </section>
-        })
-        : <section className='empty'>
-        <span className='icon icon-like'/>
-        {t('sidebar.no_tabs')}
-        </section>
-      }
+        }
+      </div>
     </div>
-  }
-
-  pathToIcon (path) {
-    if (path === 'featured') {
-      return 'star'
-    }
-    if (path === 'dashboard') {
-      return 'rocket'
-    }
-    if (path === 'library') {
-      return 'heart-filled'
-    }
-    if (path === 'preferences') {
-      return 'cog'
-    }
-    if (path === 'history') {
-      return 'history'
-    }
-    if (path === 'downloads') {
-      return 'download'
-    }
-    if (/^collections/.test(path)) {
-      return 'video_collection'
-    }
-    if (/^games/.test(path)) {
-      return 'gamepad'
-    }
-    if (/^users/.test(path)) {
-      return 'users'
-    }
-    if (/^search/.test(path)) {
-      return 'search'
-    }
-    return 'earth'
   }
 
   me () {
@@ -143,6 +109,7 @@ export class HubSidebar extends Component {
 
 HubSidebar.propTypes = {
   osx: PropTypes.bool,
+  sidebarWidth: PropTypes.number.isRequired,
   fullscreen: PropTypes.bool,
   me: PropTypes.shape({
     coverUrl: PropTypes.string,
@@ -154,6 +121,7 @@ HubSidebar.propTypes = {
     constant: PropTypes.array,
     transient: PropTypes.array
   }),
+  tabData: PropTypes.object,
 
   counts: PropTypes.shape({
     history: PropTypes.number,
@@ -166,15 +134,18 @@ HubSidebar.propTypes = {
   changeUser: PropTypes.func.isRequired,
   navigate: PropTypes.func.isRequired,
   closeTab: PropTypes.func.isRequired,
+  moveTab: PropTypes.func.isRequired,
   openPreferences: PropTypes.func.isRequired
 }
 
 const mapStateToProps = createStructuredSelector({
   osx: (state) => state.system.osx,
   fullscreen: (state) => state.ui.mainWindow.fullscreen,
+  sidebarWidth: (state) => state.preferences.sidebarWidth || 240,
   me: (state) => state.session.credentials.me,
   path: (state) => state.session.navigation.path,
   tabs: (state) => state.session.navigation.tabs,
+  tabData: (state) => state.session.navigation.tabData,
 
   counts: createSelector(
     (state) => state.history.itemsByDate,
@@ -189,6 +160,7 @@ const mapStateToProps = createStructuredSelector({
 const mapDispatchToProps = (dispatch) => ({
   navigate: (path) => dispatch(actions.navigate(path)),
   closeTab: (path) => dispatch(actions.closeTab(path)),
+  moveTab: (before, after) => dispatch(actions.moveTab({before, after})),
 
   viewCreatorProfile: () => dispatch(actions.viewCreatorProfile()),
   viewCommunityProfile: () => dispatch(actions.viewCommunityProfile()),
